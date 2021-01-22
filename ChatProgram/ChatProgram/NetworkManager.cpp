@@ -8,9 +8,6 @@ NetworkManager* NetworkManager::instance = nullptr;
 
 NetworkManager::NetworkManager()
 {
-	UDPSocketIn = INVALID_SOCKET;
-	UDPSocketOut = INVALID_SOCKET;
-
 	TCPSocketIn = INVALID_SOCKET;
 	TCPSocketOut = INVALID_SOCKET;
 	for (int i = 0; i < MAX_USERS; i++)
@@ -18,8 +15,6 @@ NetworkManager::NetworkManager()
 		TCPSocketOutClients[i] = INVALID_SOCKET;
 	}
 
-	UDPinAddr = { 0 };
-	UDPoutAddr = { 0 };
 	TCPinAddr = { 0 };
 	TCPoutAddr = { 0 };
 }
@@ -85,78 +80,6 @@ void NetworkManager::Shutdown()
 
 	WSACleanup();
 	exit(0);
-}
-
-void NetworkManager::CreateUDPSockets()
-{
-	cout << "Creating socket" << endl;
-	UDPSocketIn = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (UDPSocketIn == INVALID_SOCKET)
-	{
-		cout << " UDP socket in was not created" << endl;
-		Shutdown();
-	}
-
-	UDPSocketOut = socket(AF_INET, SOCK_DGRAM, 0);
-	if (UDPSocketOut == INVALID_SOCKET)
-	{
-		cout << " UDP socket out was not created" << endl;
-		Shutdown();
-	}
-
-}
-
-void NetworkManager::BindUDP()
-{
-	TCPinAddr.sin_family = AF_INET; //IPv4
-	TCPinAddr.sin_port = htons(7777); //port to listen on
-	TCPinAddr.sin_addr.s_addr = htonl(INADDR_ANY); //listen from any incoming connection
-
-	int bindError = bind(TCPSocketIn, reinterpret_cast<sockaddr*>(&TCPinAddr), sizeof(TCPinAddr));
-
-	if (bindError == SOCKET_ERROR)
-	{
-		cout << "[Error] binding TCP socket in failed" << endl;
-
-		Shutdown();
-	}
-}
-
-void NetworkManager::SetRemoteDataUDP()
-{
-	UDPoutAddr.sin_family = AF_INET; //IPv4
-	UDPoutAddr.sin_port = htons(7777); //port to listen on
-	inet_pton(AF_INET, "127.0.0.1", &UDPoutAddr.sin_addr);
-
-}
-
-void NetworkManager::SendDataUDP(const char* data)
-{
-	int totalByteSize = sendto(UDPSocketOut, data, MAX_MSG_SIZE, 0, reinterpret_cast<SOCKADDR*>(&UDPoutAddr), sizeof(UDPoutAddr));
-
-	if (totalByteSize == SOCKET_ERROR)
-	{
-		cout << "[Error] failed to send message" << endl;
-		Shutdown(); //may need to be removed in the future
-	}
-
-	cout << "Sent the data across: " << data << " Size was: " << totalByteSize << endl;
-}
-
-int NetworkManager::ReceiveDataUDP(char* ReceiveBuffer)
-{
-	int BytesReceived = 0;
-	int inAddrSize = sizeof(UDPinAddr);
-
-	BytesReceived = recvfrom(UDPSocketIn, ReceiveBuffer, MAX_RCV_SIZE, 0,
-		reinterpret_cast<SOCKADDR*>(&UDPinAddr), &inAddrSize);
-
-	if (BytesReceived == SOCKET_ERROR)
-	{
-		Shutdown();
-	}
-
-	return BytesReceived;
 }
 
 //TCP functions
