@@ -116,8 +116,11 @@ int main()
 				break;
 			}
 
-			rcvMessage.erase(rcvMessage.length() - 1);
-			cout << rcvMessage << endl;
+			if (rcvMessage != myMsg)
+			{
+				rcvMessage.erase(rcvMessage.length() - 1);
+				cout << rcvMessage << endl;
+			}
 			if (nodeType == SERVER)
 			{
 				NetworkManager::GetInstance()->SendDataTCP(rcvMessageBuffer, nodeType == SERVER);
